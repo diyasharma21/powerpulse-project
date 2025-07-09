@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="x.css">
+    <title>Sign Up and Log In</title>
+    <style>
+        #bg-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            object-fit: cover;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .form-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 40px;
+            border-radius: 5px;
+            width: 300px;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="email"],
+        .form-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        #popup {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #28a745;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="loginnpage.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div id="popup">Popup message</div>
+
+    <div class="container">
+        <div class="form-container">
+            <img src="logo.jpeg" width="60%" style="display: block; margin: auto;">
+            <h2>Sign Up</h2>
+            <form id="signup-form">
+                <input type="text" id="signup-username" placeholder="Customer ID" required>
+                <input type="email" id="signup-email" placeholder="Email" required>
+                <input type="password" id="signup-password" placeholder="New Password" required>
+                <input type="password" id="signup-confirm-password" placeholder="Confirm Password" required>
+                <button type="submit">Sign Up</button>
+            </form>
+
+            <h2>Log In</h2>
+            <form id="login-form">
+                <input type="text" id="login-username" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Password" required>
+                <button type="submit">Log In</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Show popup
+        function showPopup(message, color = '#28a745') {
+            const popup = document.getElementById('popup');
+            popup.textContent = message;
+            popup.style.backgroundColor = color;
+            popup.style.display = 'block';
+            setTimeout(() => {
+                popup.style.display = 'none';
+            }, 3000);
+        }
+
+        // Sign up logic
+        document.getElementById('signup-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const customerId = document.getElementById('signup-username').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            const userData = {
+                customerId: customerId,
+                email: email,
+                password: password
+            };
+            localStorage.setItem('userData', JSON.stringify(userData));
+
+            showPopup("Sign up successful!");
+            document.getElementById('signup-form').reset();
+        });
+
+        // Log in logic
+        document.getElementById('login-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const email = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            const storedData = JSON.parse(localStorage.getItem('userData'));
+
+            if (storedData && storedData.email === email && storedData.password === password) {
+                localStorage.setItem("customerId", storedData.customerId); // Save customerId for next page
+                showPopup("Login successful!");
+                setTimeout(() => {
+                    window.location.href = 'page2.html';
+                }, 1000);
+            } else {
+                showPopup("Invalid credentials!", '#dc3545');
+            }
+        });
+    </script>
+</body>
+</html>

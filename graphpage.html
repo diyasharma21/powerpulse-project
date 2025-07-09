@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Monthly Meter Consumption</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-color: #f4f4f4;
+      --text-color: #2c3e50;
+      --card-color: #ffffff;
+      --accent-red: #e74c3c;
+      --accent-blue: #3498db;
+      --accent-green: #2ecc71;
+      --button-color: #3498db;
+      --button-hover: #2980b9;
+      --shadow-color: rgba(0, 0, 0, 0.2);
+    }
+
+    body.dark-mode {
+      --bg-color: #1e272e;
+      --text-color: #f1f2f6;
+      --card-color: #2f3542;
+      --button-color: #57606f;
+      --button-hover: #747d8c;
+      --shadow-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 20px;
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    h2 {
+      font-size: 26px;
+      margin-bottom: 10px;
+    }
+
+    .toggle-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .toggle-btn, .csv-btn, .live-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: var(--button-color);
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 4px 8px var(--shadow-color);
+      transition: 0.3s ease;
+    }
+
+    .toggle-btn:hover, .csv-btn:hover, .live-btn:hover {
+      background: var(--button-hover);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: var(--card-color);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0px 6px 12px var(--shadow-color);
+    }
+
+    .calendar-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .calendar-container button {
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: bold;
+      background: linear-gradient(to right, #6dd5ed, #2193b0);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .calendar-container button:hover {
+      transform: scale(1.05);
+    }
+
+    .calendar {
+      background: var(--card-color);
+      border-radius: 15px;
+      padding: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 4px 15px var(--shadow-color);
+      transition: 0.3s ease;
+    }
+
+    .month {
+      font-size: 16px;
+      padding: 10px 16px;
+      border-radius: 10px;
+      background: var(--button-color);
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px var(--shadow-color);
+    }
+
+    .month:hover {
+      transform: translateY(-3px);
+      background: var(--button-hover);
+    }
+
+    .month.active {
+      background: var(--accent-green);
+      font-weight: bold;
+      box-shadow: 0 0 10px var(--accent-green);
+    }
+
+    .total-count,
+    .monthly-count,
+    .estimated-cost {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 10px auto;
+      padding: 10px 15px;
+      border-radius: 10px;
+      background: var(--card-color);
+      box-shadow: 0px 4px 8px var(--shadow-color);
+      max-width: 300px;
+    }
+
+    .total-count { color: var(--accent-red); }
+    .monthly-count { color: var(--accent-blue); }
+    .estimated-cost { color: var(--accent-green); }
+
+    canvas {
+      margin-top: 20px;
+    }
+
+    .print-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: var(--button-color);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px var(--shadow-color);
+      transition: 0.3s ease;
+    }
+
+    .print-btn:hover {
+      background-color: var(--button-hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="toggle-container">
+    <button class="live-btn"><a href="livegraf.html" class="colored-link"> Live Graph </a></button>
+    <button class="toggle-btn" onclick="toggleMode()">🌙 Toggle Mode</button>
+    <button class="csv-btn" onclick="downloadCSV()">📥 Download CSV</button>
+  </div>
+
+  <h2>📊 Monthly Meter Unit Consumption</h2>
+  <div id="customerInfo" style="font-size: 18px; font-weight: bold; margin-bottom: 20px;"></div>
+
+  <div class="total-count" id="totalCount">Total: 0 Units</div>
+  <div class="monthly-count" id="monthlyCount">Selected Month: 0 Units</div>
+  <div class="estimated-cost" id="estimatedCost">Estimated Cost: ₹0</div>
+
+  <div class="container">
+    <div class="calendar-container">
+      <button onclick="prevYear()">&#9665; Prev</button>
+      <div class="calendar" id="calendar"></div>
+      <button onclick="nextYear()">Next &#9655;</button>
+    </div>
+
+    <canvas id="barChart"></canvas>
+    <canvas id="costChart"></canvas>
+  </div>
+
+  <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+
+  <script>
+    let chart, costChart;
+    let currentYear = new Date().getFullYear();
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let dataValues = [350, 420, 500, 610, 720, 680, 790, 850, 620, 540, 480, 400];
+    let estimatedValues = dataValues.map(v => v * 8);
+    let selectedMonth = -1;
+
+    function updateCalendar() {
+      let calendarDiv = document.getElementById("calendar");
+      calendarDiv.innerHTML = "";
+      months.forEach((month, index) => {
+        let monthDiv = document.createElement("div");
+        monthDiv.className = "month" + (index === selectedMonth ? " active" : "");
+        monthDiv.innerText = month + " " + currentYear;
+        monthDiv.onclick = () => updateChart(index);
+        calendarDiv.appendChild(monthDiv);
+      });
+      updateTotalCount();
+    }
+
+    function prevYear() {
+      currentYear--;
+      updateCalendar();
+    }
+
+    function nextYear() {
+      currentYear++;
+      updateCalendar();
+    }
+
+    function createChart() {
+      const ctx1 = document.getElementById('barChart').getContext('2d');
+      chart = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'UNIT COUNT',
+            data: dataValues,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(0, 0, 0, 0.3)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 1000
+            }
+          }
+        }
+      });
+
+      const ctx2 = document.getElementById('costChart').getContext('2d');
+      costChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [{
+            label: 'ESTIMATED COST (₹)',
+            data: estimatedValues,
+            backgroundColor: 'rgba(46, 204, 113, 0.6)',
+            borderColor: 'rgba(0, 0, 0, 0.3)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 10000
+            }
+          }
+        }
+      });
+    }
+
+    function updateChart(index) {
+      selectedMonth = index;
+      document.querySelectorAll(".month").forEach((m, i) => {
+        m.classList.toggle("active", i === index);
+      });
+
+      let unit = dataValues[index];
+      let cost = unit * 8;
+
+      chart.data.datasets[0].data = dataValues.map((val, i) => (i === index ? val : 0));
+      costChart.data.datasets[0].data = estimatedValues.map((val, i) => (i === index ? val : 0));
+      chart.update();
+      costChart.update();
+
+      document.getElementById("monthlyCount").innerText = `Selected Month: ${unit} Units`;
+      document.getElementById("estimatedCost").innerText = `Estimated Cost: ₹${cost}`;
+    }
+
+    function updateTotalCount() {
+      let total = dataValues.reduce((sum, val) => sum + val, 0);
+      document.getElementById("totalCount").innerText = `Total: ${total} Units`;
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("dark-mode");
+    }
+
+    function downloadCSV() {
+      let csv = "Month,Unit Count,Estimated Cost (₹)\n";
+      for (let i = 0; i < months.length; i++) {
+        csv += `${months[i]},${dataValues[i]},${estimatedValues[i]}\n`;
+      }
+
+      let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      let url = URL.createObjectURL(blob);
+      let link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Meter_Data_${currentYear}.csv`);
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    window.onload = function () {
+      updateCalendar();
+      createChart();
+
+      const customerId = localStorage.getItem("customerId");
+      if (customerId) {
+        document.getElementById("customerInfo").innerText = `👤 Customer ID: ${customerId}`;
+      } else {
+        document.getElementById("customerInfo").innerText = "⚠️ No Customer ID found";
+      }
+    };
+  </script>
+</body>
+</html>

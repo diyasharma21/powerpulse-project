@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Unit Count</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            color: #2c3e50;
+            font-size: 26px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .calendar-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .calendar {
+            display: flex;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .calendar button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: 0.3s;
+        }
+        .calendar button:hover {
+            background: #2980b9;
+        }
+        .day {
+            padding: 10px 15px;
+            margin: 5px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+        .total-count {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 22px;
+            font-weight: bold;
+            color: #e74c3c;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <h2>📊 Daily Meter Unit Consumption</h2>
+    
+    <div class="container">
+        <!-- Calendar Section -->
+        <div class="calendar-container">
+            <button onclick="prevWeek()">&#9665;</button>
+            <div class="calendar" id="calendar"></div>
+            <button onclick="nextWeek()">&#9655;</button>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-container">
+            <canvas id="barChart"></canvas>
+            <div class="total-count" id="totalCount">Total: 0</div>
+        </div>
+    </div>
+    
+    <script>
+        let chart;
+        let currentDate = new Date();
+
+        // Function to Generate Week Days
+        function generateWeekDays(date) {
+            let startOfWeek = new Date(date);
+            startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+            let days = [];
+            for (let i = 0; i < 7; i++) {
+                let day = new Date(startOfWeek);
+                day.setDate(day.getDate() + i);
+                days.push(day.toDateString().slice(0, 10));
+            }
+            return days;
+        }
+        
+        // Function to Update Calendar
+        function updateCalendar() {
+            let weekDays = generateWeekDays(currentDate);
+            let calendarDiv = document.getElementById("calendar");
+            calendarDiv.innerHTML = "";
+            weekDays.forEach(day => {
+                let dayDiv = document.createElement("div");
+                dayDiv.className = "day";
+                dayDiv.innerText = day;
+                calendarDiv.appendChild(dayDiv);
+            });
+        }
+        
+        function prevWeek() {
+            currentDate.setDate(currentDate.getDate() - 7);
+            updateCalendar();
+        }
+        
+        function nextWeek() {
+            currentDate.setDate(currentDate.getDate() + 7);
+            updateCalendar();
+        }
+
+        // Function to Create Chart
+        function createChart() {
+            let ctx = document.getElementById('barChart').getContext('2d');
+            let dataValues = [200, 400, 232, 454, 126, 122, 112]; // Example Data
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    datasets: [{
+                        label: 'UNIT COUNT',
+                        data: dataValues,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(153, 102, 255, 0.6)',
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(231, 76, 60, 0.6)'
+                        ],
+                        borderColor: 'rgba(0, 0, 0, 0.3)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 800
+                        }
+                    }
+                }
+            });
+
+            updateTotalCount(dataValues);
+        }
+
+        // Function to Update Total Unit Count
+        function updateTotalCount(values) {
+            let total = values.reduce((sum, val) => sum + val, 0);
+            document.getElementById("totalCount").innerText = Total: ${total} Units;
+        }
+
+        // Run on Load
+        window.onload = function() {
+            updateCalendar();
+            createChart();
+        };
+    </script>
+</body>
+</html>
